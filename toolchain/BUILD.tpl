@@ -41,8 +41,10 @@ cc_toolchain_suite(
     toolchains = {
         "k8|clang": ":cc-clang-linux",
         "darwin|clang": ":cc-clang-darwin",
+        "x64_windows|clang": "cc-clang-windows",
         "k8": ":cc-clang-linux",
         "darwin": ":cc-clang-darwin",
+        "x64_windows": "cc-clang-windows",
     },
 )
 
@@ -56,6 +58,11 @@ cc_toolchain_config(
 cc_toolchain_config(
     name = "local_darwin",
     cpu = "darwin",
+)
+
+cc_toolchain_config(
+    name = "local_windows",
+    cpu = "x64_windows",
 )
 
 toolchain(
@@ -86,30 +93,50 @@ toolchain(
     toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
 )
 
+toolchain(
+    name = "cc-toolchain-windows",
+    exec_compatible_with = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:windows",
+    ],
+    target_compatible_with = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:windows",
+    ],
+    toolchain = ":cc-clang-windows",
+    toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
+)
+
 load("@com_grail_bazel_toolchain//toolchain:rules.bzl", "conditional_cc_toolchain")
 
-conditional_cc_toolchain("cc-clang-linux", False, %{absolute_paths})
-conditional_cc_toolchain("cc-clang-darwin", True, %{absolute_paths})
+conditional_cc_toolchain("cc-clang-linux", "linux", %{absolute_paths})
+conditional_cc_toolchain("cc-clang-darwin", "darwin", %{absolute_paths})
+conditional_cc_toolchain("cc-clang-windows", "windows", %{absolute_paths})
 
 ## LLVM toolchain files
 # Needed when not using absolute paths.
 
 filegroup(
     name = "clang",
-    srcs = [
+    srcs = glob([
         "bin/clang",
+        "bin/clang.exe",
         "bin/clang++",
+        "bin/clang++.exe",
         "bin/clang-cpp",
-    ],
+        "bin/clang-cpp.exe",
+    ]),
 )
 
 filegroup(
     name = "ld",
-    srcs = [
+    srcs = glob([
         "bin/ld.lld",
+        "bin/ld.lld.exe",
         "bin/ld",
+        "bin/ld.exe",
         "bin/ld.gold",  # Dummy file on non-linux.
-    ],
+    ]),
 )
 
 filegroup(
@@ -146,50 +173,52 @@ filegroup(
 
 filegroup(
     name = "ar",
-    srcs = ["bin/llvm-ar"],
+    srcs = glob(["bin/llvm-ar", "bin/llvm-ar.exe"]),
 )
 
 filegroup(
     name = "as",
-    srcs = [
+    srcs = glob([
         "bin/clang",
+        "bin/clang.exe",
         "bin/llvm-as",
-    ],
+        "bin/llvm-as.exe",
+    ]),
 )
 
 filegroup(
     name = "nm",
-    srcs = ["bin/llvm-nm"],
+    srcs = glob(["bin/llvm-nm", "bin/llvm-nm.exe"]),
 )
 
 filegroup(
     name = "objcopy",
-    srcs = ["bin/llvm-objcopy"],
+    srcs = glob(["bin/llvm-objcopy", "bin/llvm-objcopy.exe"]),
 )
 
 filegroup(
     name = "objdump",
-    srcs = ["bin/llvm-objdump"],
+    srcs = glob(["bin/llvm-objdump", "bin/llvm-objdump.exe"]),
 )
 
 filegroup(
     name = "profdata",
-    srcs = ["bin/llvm-profdata"],
+    srcs = glob(["bin/llvm-profdata", "bin/llvm-profdata.exe"]),
 )
 
 filegroup(
     name = "dwp",
-    srcs = ["bin/llvm-dwp"],
+    srcs = glob(["bin/llvm-dwp", "bin/llvm-dwp.exe"]),
 )
 
 filegroup(
     name = "ranlib",
-    srcs = ["bin/llvm-ranlib"],
+    srcs = glob(["bin/llvm-ranlib", "bin/llvm-ranlib.exe"]),
 )
 
 filegroup(
     name = "readelf",
-    srcs = ["bin/llvm-readelf"],
+    srcs = glob(["bin/llvm-readelf", "bin/llvm-readelf.exe"]),
 )
 
 filegroup(

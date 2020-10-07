@@ -41,6 +41,8 @@ def _make_shortos(x):
         return "linux"
     elif x == "mac os x":
         return "darwin"
+    elif x.startswith("windows"):
+        return "windows"
     fail("Unsupported OS: " + x)
 
 def llvm_toolchain_impl(rctx):
@@ -95,11 +97,12 @@ def llvm_toolchain_impl(rctx):
         substitutions,
     )
 
-    rctx.symlink("/usr/bin/ar", "bin/ar")  # For GoLink.
+    if shortos in ["linux", "darwin"]:
+        rctx.symlink("/usr/bin/ar", "bin/ar")  # For GoLink.
 
-    # For GoCompile on macOS; compiler path is set from linker path.
-    # It also helps clang driver sometimes for the linker to be colocated with the compiler.
-    rctx.symlink("/usr/bin/ld", "bin/ld")
+        # For GoCompile on macOS; compiler path is set from linker path.
+        # It also helps clang driver sometimes for the linker to be colocated with the compiler.
+        rctx.symlink("/usr/bin/ld", "bin/ld")
     if rctx.os.name == "linux":
         rctx.symlink("/usr/bin/ld.gold", "bin/ld.gold")
     else:
@@ -110,11 +113,11 @@ def llvm_toolchain_impl(rctx):
     if not _download_llvm(rctx, shortos):
         _download_llvm_preconfigured(rctx)
 
-def conditional_cc_toolchain(name, darwin, absolute_paths = False):
+def conditional_cc_toolchain(name, shortos, absolute_paths = False):
     # Toolchain macro for BUILD file to use conditional logic.
 
-    toolchain_config = "local_darwin" if darwin else "local_linux"
-    toolchain_identifier = "clang-darwin" if darwin else "clang-linux"
+    toolchain_config = "local_" + shortos
+    toolchain_identifier = "clang-" + shortos
 
     if absolute_paths:
         _cc_toolchain(
@@ -125,11 +128,11 @@ def conditional_cc_toolchain(name, darwin, absolute_paths = False):
             linker_files = ":empty",
             objcopy_files = ":empty",
             strip_files = ":empty",
-            supports_param_files = 0 if darwin else 1,
+            supports_param_files = 0 if shortos == "darwin" else 1,
             toolchain_config = toolchain_config,
         )
     else:
-        extra_files = [":cc_wrapper"] if darwin else []
+        extra_files = [":cc_wrapper"] if shortos == "darwin" else []
         native.filegroup(name = name + "-all-files", srcs = [":all_components"] + extra_files)
         native.filegroup(name = name + "-archiver-files", srcs = [":ar"] + extra_files)
         native.filegroup(name = name + "-assembler-files", srcs = [":as"] + extra_files)
@@ -145,6 +148,6 @@ def conditional_cc_toolchain(name, darwin, absolute_paths = False):
             linker_files = name + "-linker-files",
             objcopy_files = ":objcopy",
             strip_files = ":empty",
-            supports_param_files = 0 if darwin else 1,
+            supports_param_files = 0 if shortos == "darwin" else 1,
             toolchain_config = toolchain_config,
         )

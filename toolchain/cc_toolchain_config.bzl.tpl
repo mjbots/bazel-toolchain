@@ -35,6 +35,8 @@ def _impl(ctx):
         toolchain_identifier = "clang-darwin"
     elif (ctx.attr.cpu == "k8"):
         toolchain_identifier = "clang-linux"
+    elif (ctx.attr.cpu == "x64_windows"):
+        toolchain_identifier = "clang-windows"
     else:
         fail("Unreachable")
 
@@ -42,6 +44,8 @@ def _impl(ctx):
         host_system_name = "x86_64"
     elif (ctx.attr.cpu == "darwin"):
         host_system_name = "x86_64-apple-macosx"
+    elif (ctx.attr.cpu == "x64_windows"):
+        host_system_name = "x64_windows"
     else:
         fail("Unreachable")
 
@@ -49,6 +53,8 @@ def _impl(ctx):
         target_system_name = "x86_64-apple-macosx"
     elif (ctx.attr.cpu == "k8"):
         target_system_name = "x86_64-unknown-linux-gnu"
+    elif (ctx.attr.cpu == "x64_windows"):
+        target_system_name = "x86_64-windows"
     else:
         fail("Unreachable")
 
@@ -56,6 +62,8 @@ def _impl(ctx):
         target_cpu = "darwin"
     elif (ctx.attr.cpu == "k8"):
         target_cpu = "k8"
+    elif (ctx.attr.cpu == "x64_windows"):
+        target_cpu = "x64_windows"
     else:
         fail("Unreachable")
 
@@ -63,11 +71,14 @@ def _impl(ctx):
         target_libc = "glibc_unknown"
     elif (ctx.attr.cpu == "darwin"):
         target_libc = "macosx"
+    elif (ctx.attr.cpu == "x64_windows"):
+        target_libc = "msvc"
     else:
         fail("Unreachable")
 
     if (ctx.attr.cpu == "darwin" or
-        ctx.attr.cpu == "k8"):
+        ctx.attr.cpu == "k8" or
+        ctx.attr.cpu == "x64_windows"):
         compiler = "clang"
     else:
         fail("Unreachable")
@@ -76,6 +87,8 @@ def _impl(ctx):
         abi_version = "clang"
     elif (ctx.attr.cpu == "darwin"):
         abi_version = "darwin_x86_64"
+    elif (ctx.attr.cpu == "x64_windows"):
+        abi_version = "clang"
     else:
         fail("Unreachable")
 
@@ -83,13 +96,16 @@ def _impl(ctx):
         abi_libc_version = "darwin_x86_64"
     elif (ctx.attr.cpu == "k8"):
         abi_libc_version = "glibc_unknown"
+    elif (ctx.attr.cpu == "x64_windows"):
+        abi_libc_version = "unknown"
     else:
         fail("Unreachable")
 
     cc_target_os = None
 
     if (ctx.attr.cpu == "darwin" or
-        ctx.attr.cpu == "k8"):
+        ctx.attr.cpu == "k8" or
+        ctx.attr.cpu == "x64_windows"):
         builtin_sysroot = "%{sysroot_path}"
     else:
         fail("Unreachable")
@@ -162,15 +178,22 @@ def _impl(ctx):
             "-Wl,--build-id=md5",
             "-Wl,--hash-style=gnu",
             "-Wl,-z,relro,-z,now",
+            "-lm",
         ]
     elif ctx.attr.cpu == "darwin":
         linker_flags = [
             # Difficult to guess options to statically link C++ libraries with the macOS linker.
             "-lc++",
             "-lc++abi",
+            "-lm",
             "-headerpad_max_install_names",
             "-undefined",
             "dynamic_lookup",
+        ]
+    elif ctx.attr.cpu == "x64_windows":
+        linker_flags = [
+            "-fuse-ld=lld",
+            "-rtlib=compiler-rt",  
         ]
     else:
         fail("Unreachable")
@@ -216,7 +239,6 @@ def _impl(ctx):
                 flag_groups = [
                     flag_group(
                         flags = [
-                            "-lm",
                             "-no-canonical-prefixes",
                         ] + linker_flags,
                     ),
@@ -480,7 +502,6 @@ def _impl(ctx):
         fastbuild_feature,
         dbg_feature,
         random_seed_feature,
-        supports_pic_feature,
         supports_dynamic_linker_feature,
         unfiltered_compile_flags_feature,
         default_link_flags_feature,
@@ -495,6 +516,9 @@ def _impl(ctx):
         # compiler_input_flags_feature
         # compiler_output_flags_feature
     ]
+    if ctx.attr.cpu != "x64_windows":
+        features.extend([supports_pic_feature])
+
     if (ctx.attr.cpu == "darwin"):
         features.extend([framework_paths_feature])
 
@@ -519,6 +543,11 @@ def _impl(ctx):
         ] + [
             %{darwin_additional_cxx_builtin_include_directories}
         ]
+    elif (ctx.attr.cpu == "x64_windows"):
+        cxx_builtin_include_directories += [
+            "C:/Program Files",
+            "C:/Program Files (x86)",
+        ]
     else:
         fail("Unreachable")
 
@@ -533,6 +562,15 @@ def _impl(ctx):
         ]
     elif (ctx.attr.cpu == "k8"):
         make_variables = []
+    elif (ctx.attr.cpu == "x64_windows"):
+        make_variables = []
+        artifact_name_patterns += [
+            artifact_name_pattern(
+                  category_name = "executable",
+                  prefix = "",
+                  extension = ".exe",
+              ),
+        ]
     else:
         fail("Unreachable")
 
@@ -610,6 +648,50 @@ def _impl(ctx):
             ),
             tool_path(name = "ar", path = "/usr/bin/libtool"),
         ]
+    elif (ctx.attr.cpu == "x64_windows"):
+        tool_paths = [
+            tool_path(name = "ld", path = "%{tools_path_prefix}bin/ld.exe"),
+            tool_path(
+                name = "cpp",
+                path = "%{tools_path_prefix}bin/clang-cpp.exe",
+            ),
+            tool_path(
+                name = "dwp",
+                path = "%{tools_path_prefix}bin/llvm-dwp.exe",
+            ),
+            tool_path(
+                name = "gcov",
+                path = "%{tools_path_prefix}bin/llvm-profdata.exe",
+            ),
+            tool_path(
+                name = "nm",
+                path = "%{tools_path_prefix}bin/llvm-nm.exe",
+            ),
+            tool_path(
+                name = "objcopy",
+                path = "%{tools_path_prefix}bin/llvm-objcopy.exe",
+            ),
+            tool_path(
+                name = "objdump",
+                path = "%{tools_path_prefix}bin/llvm-objdump.exe",
+            ),
+            tool_path(
+                name = "gcc",
+                path = "%{tools_path_prefix}bin/cc_wrapper.sh",
+            ),
+            tool_path(
+                name = "gcc",
+                path = "%{tools_path_prefix}bin/clang.exe",
+            ),
+            tool_path(
+                name = "ar",
+                path = "%{tools_path_prefix}bin/llvm-ar.exe",
+            ),
+            tool_path(
+                name = "strip",
+                path = "%{tools_path_prefix}bin/llvm-strip.exe",
+            ),
+        ]
     else:
         fail("Unreachable")
 
@@ -647,6 +729,7 @@ cc_toolchain_config = rule(
             values = [
                 "darwin",
                 "k8",
+                "x64_windows",
             ],
         ),
     },
