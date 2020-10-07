@@ -296,9 +296,27 @@ def _impl(ctx):
                 ],
                 with_features = [with_feature_set(features = ["opt"])],
             ),
+        ],
+    )
+
+    cpp17_feature = feature(
+        name = "c++17",
+        enabled = True,
+        flag_sets = [
             flag_set(
                 actions = all_cpp_compile_actions,
-                flag_groups = [flag_group(flags = ["-std=c++17", "-stdlib=libc++"])],
+                flag_groups = [flag_group(flags = ["-std=c++17"])],
+            ),
+        ],
+    )
+
+    libcpp_feature = feature(
+        name = "libc++",
+        enabled = True,
+        flag_sets = [
+            flag_set(
+                actions = all_cpp_compile_actions,
+                flag_groups = [flag_group(flags = ["-stdlib=libc++"])],
             ),
         ],
     )
@@ -506,6 +524,7 @@ def _impl(ctx):
         unfiltered_compile_flags_feature,
         default_link_flags_feature,
         default_compile_flags_feature,
+        cpp17_feature,
         objcopy_embed_flags_feature,
         user_compile_flags_feature,
         sysroot_feature,
@@ -517,7 +536,7 @@ def _impl(ctx):
         # compiler_output_flags_feature
     ]
     if ctx.attr.cpu != "x64_windows":
-        features.extend([supports_pic_feature])
+        features.extend([supports_pic_feature, libcpp_feature])
 
     if (ctx.attr.cpu == "darwin"):
         features.extend([framework_paths_feature])
