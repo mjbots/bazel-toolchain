@@ -132,7 +132,11 @@ def conditional_cc_toolchain(name, shortos, absolute_paths = False):
             toolchain_config = toolchain_config,
         )
     else:
-        extra_files = [":cc_wrapper"] if shortos == "darwin" else []
+        extra_files = []
+        if shortos == "darwin":
+            extra_files.extend([":cc_wrapper"])
+        if shortos == "windows":
+            extra_files.extend(["@org_llvm_libcxx//:raw_headers"])
         native.filegroup(name = name + "-all-files", srcs = [":all_components"] + extra_files)
         native.filegroup(name = name + "-archiver-files", srcs = [":ar"] + extra_files)
         native.filegroup(name = name + "-assembler-files", srcs = [":as"] + extra_files)
