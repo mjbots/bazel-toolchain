@@ -308,6 +308,19 @@ def _impl(ctx):
                 flag_groups = [flag_group(flags = ["-std=c++17"])],
             ),
         ],
+        provides = ["cppversion"],
+    )
+
+    cpp20_feature = feature(
+        name = "c++20",
+        enabled = False,
+        flag_sets = [
+            flag_set(
+                actions = all_cpp_compile_actions,
+                flag_groups = [flag_group(flags = ["-std=c++20", "-D_HAS_DEPRECATED_RESULT_OF"])],
+            ),
+        ],
+        provides = ["cppversion"],
     )
 
     libcpp_feature = feature(
@@ -525,6 +538,7 @@ def _impl(ctx):
         default_link_flags_feature,
         default_compile_flags_feature,
         cpp17_feature,
+        cpp20_feature,
         objcopy_embed_flags_feature,
         user_compile_flags_feature,
         sysroot_feature,
