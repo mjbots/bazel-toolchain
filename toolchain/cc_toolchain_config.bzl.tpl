@@ -332,6 +332,40 @@ def _impl(ctx):
                 flag_groups = [flag_group(flags = ["-stdlib=libc++"])],
             ),
         ],
+        provides = ["cppstdlib"],
+    )
+
+    vendored_libcpp_feature = feature(
+        name = "vendored_libc++",
+        enabled = False,
+        flag_sets = [
+            flag_set(
+                actions = all_link_actions,
+                flag_groups = [
+                    flag_group(
+                        flags = [
+                            "-nostdlib++",
+                            "-Wl,-nodefaultlib:libc++",
+                        ],
+                    ),
+                ],
+            ),
+            flag_set(
+                actions = all_cpp_compile_actions,
+                flag_groups = [
+                    flag_group(
+                        flags = [
+                            "-D_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS",
+                            "-nostdinc++",
+                            "-nostdlib++",
+                            "-isystem", "external/org_llvm_libcxx/include",
+                            "-isystem", "external/org_llvm_libcxxabi/include",
+                        ],
+                    ),
+                ],
+            ),
+        ],
+        provides = ["cppstdlib"],
     )
 
     objcopy_embed_flags_feature = feature(
@@ -539,6 +573,7 @@ def _impl(ctx):
         default_compile_flags_feature,
         cpp17_feature,
         cpp20_feature,
+        vendored_libcpp_feature,
         objcopy_embed_flags_feature,
         user_compile_flags_feature,
         sysroot_feature,

@@ -23,3 +23,23 @@ def bazel_toolchain_dependencies():
             strip_prefix = "rules_cc-726dd8157557f1456b3656e26ab21a1646653405",
             urls = ["https://github.com/bazelbuild/rules_cc/archive/726dd8157557f1456b3656e26ab21a1646653405.tar.gz"],
         )
+    if not native.existing_rule("org_llvm_libcxx"):
+        http_archive(
+            name = "org_llvm_libcxx",
+            urls = [
+                "https://github.com/llvm/llvm-project/releases/download/llvmorg-10.0.0/libcxx-10.0.0.src.tar.xz",
+            ],
+            sha256 = "270f8a3f176f1981b0f6ab8aa556720988872ec2b48ed3b605d0ced8d09156c7",
+            strip_prefix = "libcxx-10.0.0.src",
+            build_file = Label("//toolchain/internal:libcxx.BUILD"),
+        )
+    if not native.existing_rule("org_llvm_libcxxabi"):
+        http_archive(
+            name = "org_llvm_libcxxabi",
+            urls = [
+                "https://github.com/llvm/llvm-project/releases/download/llvmorg-10.0.0/libcxxabi-10.0.0.src.tar.xz",
+            ],
+            sha256 = "e71bac75a88c9dde455ad3f2a2b449bf745eafd41d2d8432253b2964e0ca14e1",
+            strip_prefix = "libcxxabi-10.0.0.src",
+            build_file = Label("//toolchain/internal:libcxxabi.BUILD"),
+        )
