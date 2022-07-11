@@ -81,10 +81,17 @@ def _linux(llvm_version):
         # There is no binary packages specifically for 20.04, but those for 18.04 works on
         # 20.04
         os_name = "linux-gnu-ubuntu-18.04"
+    elif (distname == "ubuntu" and version.startswith("22.04")) or (distname == "linuxmint" and version.startswith("20")):
+        # There is no binary packages specifically for 22.04, but those for 18.04 works on
+        # 22.04
+        os_name = "linux-gnu-ubuntu-18.04"
     elif (distname == "ubuntu" and version.startswith("18.04")) or (distname == "linuxmint" and version.startswith("19")):
         os_name = "linux-gnu-ubuntu-18.04"
     elif (distname == "ubuntu" and version.startswith("20")) or (distname == "pop" and version.startswith("20")):
         # use ubuntu 18.04 clang LLVM release for ubuntu 20.04
+        os_name = "linux-gnu-ubuntu-18.04"
+    elif (distname == "ubuntu" and version.startswith("22")):
+        # use ubuntu 18.04 clang LLVM release for ubuntu 22.04
         os_name = "linux-gnu-ubuntu-18.04"
     elif distname in ["arch", "ubuntu", "manjaro"] or (distname == "linuxmint" and version.startswith("18")):
         os_name = "linux-gnu-ubuntu-16.04"
