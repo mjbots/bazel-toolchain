@@ -93,6 +93,9 @@ def _linux(llvm_version):
     elif (distname == "ubuntu" and version.startswith("22")):
         # use ubuntu 18.04 clang LLVM release for ubuntu 22.04
         os_name = "linux-gnu-ubuntu-18.04"
+    elif (distname == "ubuntu" and version.startswith("24")):
+        # use ubuntu 18.04 clang LLVM release for ubuntu 24.04
+        os_name = "linux-gnu-ubuntu-18.04"
     elif distname in ["arch", "ubuntu", "manjaro"] or (distname == "linuxmint" and version.startswith("18")):
         os_name = "linux-gnu-ubuntu-16.04"
     elif distname == "debian" and (version is None or int(version) == 10):
