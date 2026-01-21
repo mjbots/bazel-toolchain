@@ -19,9 +19,9 @@ def bazel_toolchain_dependencies():
     if not native.existing_rule("rules_cc"):
         http_archive(
             name = "rules_cc",
-            sha256 = "b6f34b3261ec02f85dbc5a8bdc9414ce548e1f5f67e000d7069571799cb88b25",
-            strip_prefix = "rules_cc-726dd8157557f1456b3656e26ab21a1646653405",
-            urls = ["https://github.com/bazelbuild/rules_cc/archive/726dd8157557f1456b3656e26ab21a1646653405.tar.gz"],
+            sha256 = "906e89286acc67c20819c3c88b3283de0d5868afda33635d70acae0de9777bb7",
+            strip_prefix = "rules_cc-0.0.14",
+            urls = ["https://github.com/bazelbuild/rules_cc/releases/download/0.0.14/rules_cc-0.0.14.tar.gz"],
         )
     if not native.existing_rule("org_llvm_libcxx"):
         http_archive(
